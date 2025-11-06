@@ -3,12 +3,12 @@ name: CICD (Dev, Staging, Prod)
 on:
   push:
     branches:
-      - main
+      - master
     paths-ignore:
       - .gitignore
       - LICENSE
       - README.md
-  
+
   workflow_dispatch:
 
 defaults:
@@ -16,7 +16,6 @@ defaults:
     shell: pwsh
 
 jobs:
-  
   build:
     uses: ./.github/workflows/build.yml
     secrets: inherit
@@ -29,39 +28,39 @@ jobs:
     needs: [build, unit-test]
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: dev
+      environment: Development
     secrets: inherit
 
   staging-approval-gate:
     needs: dev-deploy
-    environment: staging
+    environment: Staging
     runs-on: ubuntu-latest
     steps:
       - name: approved
-        env: 
+        env:
           ENV_NAME: Staging
         run: write-host "Approve for $($env.ENV_NAME)"
-    
+
   staging-deploy:
     needs: staging-approval-gate
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: staging
+      environment: Staging
     secrets: inherit
 
   prod-approval-gate:
     needs: staging-deploy
-    environment: prod
+    environment: Production
     runs-on: ubuntu-latest
     steps:
       - name: approved
-        env: 
-          ENV_NAME: prod
+        env:
+          ENV_NAME: Production
         run: write-host "Approve for $($env.ENV_NAME)"
-    
+
   prod-deploy:
     needs: prod-approval-gate
     uses: ./.github/workflows/deploy-environment.yml
     with:
-      environment: prod
+      environment: Production
     secrets: inherit
